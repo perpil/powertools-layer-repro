@@ -1,0 +1,38 @@
+service: powertools-layer-repro
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  memorySize: 256
+  architecture: arm64
+  environment:
+    POWERTOOLS_SERVICE_NAME: ${self:service}
+    DEPLOYMENT_ID: Deployment-${sls:instanceId}
+
+functions:
+  api:
+    handler: index.handler
+    name: Inigo-Montoya
+    tracing: true
+    #layers:
+    #  - !Sub 'arn:aws:lambda:${AWS::Region}:094274105915:layer:AWSLambdaPowertoolsTypeScript:21'
+    events:
+      - httpApi:
+          path: /
+          method: get
+plugins:
+  - serverless-esbuild
+custom:
+  esbuild:
+    bundle: true
+    mainFields:
+      - 'module'
+      - 'main'
+    format: esm
+    outputFileExtension: .mjs
+    banner:
+      js: import { createRequire } from 'module';const require = (await import('node:module')).createRequire(import.meta.url);const __filename = (await import('node:url')).fileURLToPath(import.meta.url);const __dirname = (await import('node:path')).dirname(__filename);
+    #exclude:
+    #- '@aws-lambda-powertools'
+    #- 'aws-xray-sdk-core'
